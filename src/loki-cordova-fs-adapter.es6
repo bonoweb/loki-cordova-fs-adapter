@@ -8,20 +8,21 @@ class LokiCordovaFSAdapter {
     }
 
     saveDatabase(dbname, dbstring, callback) {
-        console.log(TAG, "saving database");
+        //console.log(TAG, "saving database");
         this._getFile(dbname,
             (fileEntry) => {
                 fileEntry.createWriter(
                     (fileWriter) => {
-                        fileWriter.onwriteend = () => {
+                        fileWriter.OnWrite = () => {
                             if (fileWriter.length === 0) {
                                 var blob = this._createBlob(dbstring, "text/plain");
                                 fileWriter.write(blob);
+                            }
+                            else {
                                 callback();
                             }
                         };
                         fileWriter.truncate(0);
-
                     },
                     (err) => {
                         console.error(TAG, "error writing file", err);
@@ -37,7 +38,7 @@ class LokiCordovaFSAdapter {
     }
 
     loadDatabase(dbname, callback) {
-        console.log(TAG, "loading database");
+        //console.log(TAG, "loading database");
         this._getFile(dbname,
             (fileEntry) => {
                 fileEntry.file((file) => {
@@ -46,10 +47,34 @@ class LokiCordovaFSAdapter {
                         var contents = event.target.result;
                         if (contents.length === 0) {
                             console.warn(TAG, "couldn't find database");
-                            callback(null);
+                            setTimeout( () => {
+                                    console.warn(TAG, 're-trying');
+                                    var reader2 = new FileReader();
+                                    reader2.onload = function (event){
+                                        var contents = event.target.result;
+                                        if (contents.length === 0){
+                                            console.warn("couldn't find database again!");
+                                            callback(null);
+                                        }
+                                        else{
+                                            callback(contents);
+                                        }
+                                    };
+                                    reader2.readAsText(file);
+                                },5000);
+                            //callback(null);
                         }
                         else {
-                            callback(contents);
+                            //callback(contents);
+                            var n = contents.indexOf('}{"filename":');
+                            if (n === -1)
+                            {
+                                callback(contents);
+                            } else
+                            {
+                                var newContents = contents.substring(0, n+1);
+                                callback(newContents);
+                            }
                         }
                     };
                     reader.readAsText(file);
