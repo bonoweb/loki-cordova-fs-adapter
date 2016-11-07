@@ -15,3 +15,6 @@ var adapter = new LokiCordovaFSAdapter({"prefix": "loki"});
 var db = new loki("dbname", {adapter: adapter});
 ```
 
+
+#####Forked to try to resolve some problems with AppGyver Steroids (maybe...)
+
